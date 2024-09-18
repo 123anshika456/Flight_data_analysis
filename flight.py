@@ -1,11 +1,10 @@
 import streamlit as st
 import pandas as pd 
-import matplotlib.pyplot as plt
 import plotly.express as px
 
 # ui configuration
 st.set_page_config(
-    page_title='Flight App', page_icon="", layout="wide",)
+    page_title='Flight App', page_icon="🤞", layout="wide",)
 
 # load data
 @st.cache_data
@@ -15,13 +14,15 @@ def load_data():
 # ui integration
 with st.spinner("loading dataset..."):
     df = load_data()
+st.snow()    
 
 st.title("Flight Data Analysis")
 st.subheader("A simple flight operations overview")
 
 st.sidebar.title("Menu")
-choice = st.sidebar.radio("Option",["View Data", "Visualize Data", "Column Analysis",'Correlation Analysis'])
+choice = st.sidebar.radio("Option",["View Data", "Visualize Data", "Column Analysis", "Correlation Analysis"])
 
+# Creating a View Data and Visualization Data
 if choice == 'View Data':
    st.header("View Dataset")
    st.dataframe(df)
@@ -50,9 +51,10 @@ elif choice == 'Visualize Data':
     st.plotly_chart(fig3)
     fig4 = px.treemap(df, path=['Source','Price'], title=f"Flight Type Distribution")
     st.plotly_chart(fig4)
-    fig5 = px.scatter(df, x=scat_col, y=snum_col)
+    fig5 = px.scatter(df, x=scat_col, y=snum_col, title=f"Scatter Plot of {scat_col} by {snum_col}")
     st.plotly_chart(fig5)
 
+    # Creating a Column Analysis
 elif choice == 'Column Analysis':
     columns = df.columns.tolist()
     scol = st.sidebar.selectbox("Select a column", columns)
@@ -60,7 +62,7 @@ elif choice == 'Column Analysis':
         vc=df[scol].value_counts()
         most_common = vc.idxmax()
         c1, c2 = st.columns(2)
-        # value counts
+    # value counts
         c2.subheader("Total Data")
         c2. dataframe(vc, use_container_width=True)
         c2.metric("Most Common", most_common, int(vc[most_common]))
@@ -68,20 +70,25 @@ elif choice == 'Column Analysis':
         c1.plotly_chart(fig1)
         fig2 = px.pie(df, names=scol, title=f"Percentage wise of {scol}", hole=0.2)
         st.plotly_chart(fig2)
-        fig3 = px.bar(df, y=scol, title=f"{scol}", height= 800)
+        fig3 = px.bar(df, y=scol, title=f"{scol}", height=500)
         st.plotly_chart(fig3)
         
         col_count = df[scol].value_counts()
-        fig4 = px.bar(col_count, x=col_count.index, y=col_count.values, title=f"Distribution of {scol}", height= 800, log_y=True)
+        fig4 = px.bar(col_count, x=col_count.index, y=col_count.values, title=f"Count of {scol}", height= 500, log_y=True)
         st.plotly_chart(fig4)
         fig5 = px.scatter(df, x =scol, title=f"{scol}", height=500)
         st.plotly_chart(fig5)
-        fig6= px.sunburst(df, path=['Source','Price'], height=400)
-        st.plotly_chart(fig6)    
+        fig6= px.sunburst(df, path=['Source','Price'], title=f"Sunburst of {scol}",height=500)
+        st.plotly_chart(fig6)   
+        
+    # Creating a Correlation Analysis    
 elif choice == 'Correlation Analysis':
-    num_col = df.select_dtypes(include='number').columns.tolist()
-    c1, c2 = st.columns(2)
-    colx = c1.selectbox("Select Column for X axis", num_col)
-    coly = c2.selectbox("Select Column for Y axis", num_col, index=1)
-    fig7 = px.scatter(df, x=colx, y=coly, title=f'Correlation b/w {colx} and {coly}')
-    st.plotly_chart(fig7, use_container_width=True, height=700)
+    num_col= df.select_dtypes(include='number').columns.tolist()
+    c1, c2= st.columns(2)
+    colx= c1.selectbox("Select Column for X axis", num_col)
+    coly= c2.selectbox("Select Column for Y axis", num_col, index=1)
+    fig7= px.scatter(df, x=colx, y=coly, title=f'Correlation b/w {colx} and {coly}')
+    st.plotly_chart(fig7, use_container_width=True, height=500)
+    corr_matrix= df[['Price','Month','Total_Stops','Date','Dep_hours']].corr()
+    fig8= px.imshow(corr_matrix,text_auto=True, color_continuous_scale='thermal', title=f"Heatmap of correlation")
+    st.plotly_chart(fig8)
